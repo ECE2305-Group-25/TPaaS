@@ -14,7 +14,8 @@ operating principles of the TPaaS backend.
 
 ## Structure
 
-![](doc/structure.png)
+![](doc/structure.png)  
+*Dashed outlines indicate components whose designs have not yet been finalized*
 
 ## Running
 
