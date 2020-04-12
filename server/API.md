@@ -35,8 +35,7 @@ this:
     "success": true,
     "reason": "",
     "data": {
-        "rolls_remaining": 4,
-        "dispenser_connected": true
+        "rolls_remaining": 4
     }
 }
 ```
@@ -96,8 +95,7 @@ Sample Response:
     "success": true,
     "reason": "",
     "data": {
-        "rolls_remaining": 4,
-        "dispenser_connected": true
+        "rolls_remaining": 4
     }
 }
 ```
