@@ -34,8 +34,10 @@ this:
     "request_type": "GET",
     "success": true,
     "reason": "",
-    "rolls_remaining": 4,
-    "dispenser_connected": true
+    "data": {
+        "rolls_remaining": 4,
+        "dispenser_connected": true
+    }
 }
 ```
 
@@ -48,16 +50,9 @@ The `endpoint` parameter contains the path the initiating request was made to.
 If the user makes a request to `web.site/api/foo` this parameter will contain
 the string `/api/foo`.
 
-*design note: This could probably be eliminated, I would assume the user knows
-what endpoint they're calling.  I think bryce defined it originally, maybe he
-knows more about it.*
-
 ### `request_type`
 
 The `request_type` parameter contains the requesting method used.
-
-*design note: Like the previous field, I'm not sure this is strictly necessary,
-I'd like some input from bryce on it.*
 
 ### `success` and `reason`
 
@@ -100,8 +95,10 @@ Sample Response:
     "request_type": "GET",
     "success": true,
     "reason": "",
-    "rolls_remaining": 4,
-    "dispenser_connected": true
+    "data": {
+        "rolls_remaining": 4,
+        "dispenser_connected": true
+    }
 }
 ```
 
