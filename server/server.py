@@ -1,11 +1,17 @@
 ##
+# Main Server Module.
 #
+# When invoking Flask, ensure `FLASK_APP` is pointing to this file.
 
 import flask
 import json
 import util
 
 app = flask.Flask(__name__)
+
+##############
+## HANDLERS ##
+##############
 
 @app.route('/api/status')
 @util.apiwrap
@@ -17,6 +23,10 @@ def api_status():
             "neet": "noot"
         }
     }
+
+##########################
+## APIWRAP TEST METHODS ##
+##########################
 
 @app.route('/test/missing_param')
 @util.apiwrap
