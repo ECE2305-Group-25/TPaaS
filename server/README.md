@@ -12,6 +12,9 @@ Hello and welcome to the documentation for the Toilet Paper As A Service Server.
 This documentation contains information on the structure, organization, and
 operating principles of the TPaaS backend.
 
+The specification for the application programming interface can be found in
+[API.md](API.md)
+
 ## Structure
 
 ![](doc/structure.png)  
