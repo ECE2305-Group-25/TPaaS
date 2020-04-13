@@ -7,8 +7,10 @@ import flask
 import json
 import util
 import hardware
+from pin import PIN
 
 app = flask.Flask(__name__)
+pin = PIN()
 
 ##############
 ## HANDLERS ##
@@ -24,6 +26,21 @@ def api_status():
         }
     }
 
+@app.route('/api/generate_pin')
+@util.apiwrap
+def api_generatepin():
+    success, result = pin.generate_new_pin()
+    if not success:
+        return {
+            "success": False,
+            "reason": result
+        }
+    else:
+        hardware.change_pin(result)
+        return {
+            "success": True
+        }
+
 @app.route('/api/dispense')
 @util.apiwrap
 def api_dispense():
@@ -34,7 +51,7 @@ def api_dispense():
             "reason": "This endpoint requires authentication"
         }
     # Validate the authentication token
-    if not flask.request.args.get("auth") == hardware.get_current_auth_token():
+    if not pin.check_pin(flask.request.args.get("auth")):
         return {
             "success": False,
             "reason": "Authentication Failure"

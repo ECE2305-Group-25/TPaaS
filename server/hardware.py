@@ -3,11 +3,11 @@
 
 
 ##
-# Get the current authentication token.
+# Display a new PIN
 #
-def get_current_auth_token():
-    print("STUB: get_current_auth_token()")
-    return "potato"
+def change_pin(pin):
+    print("STUB: change_pin({})".format(pin))
+    pass
 
 ##
 # Dispense a new roll

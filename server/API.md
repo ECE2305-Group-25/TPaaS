@@ -88,7 +88,7 @@ GET https://web.site/api/status
 ```
 
 Sample Response:
-```
+```json
 {
     "endpoint": "/api/status",
     "request_type": "GET",
@@ -114,7 +114,7 @@ GET https://web.site/api/dispense?auth=12345
 ```
 
 Sample Success Response:
-```
+```json
 {
     "endpoint": "/api/dispense",
     "request_type": "GET",
@@ -124,7 +124,7 @@ Sample Success Response:
 ```
 
 Sample Failure Response:
-```
+```json
 {
     "endpoint": "/api/dispense",
     "request_type": "GET",
@@ -133,36 +133,32 @@ Sample Failure Response:
 }
 ```
 
-### `/api/openlid`
+### `/api/generate_pin`
 
-Authentication Required: Yes
+Authentication Required: No
 
-The `openlid` endpoint is used for unlocking the refill hatch of the unit.
-Because opening the lid of the unit will grant the user unrestricted access to a
-large number of toilet paper roles, this endpoint requires a special master auth
-token.
-
-Sample Request:
-```
-GET https://web.site/api/openlid?auth=master_auth_token
-```
+The `generate_pin` method instructs the server to invalidate the previously
+stored pin and push a new one to the integrated display.  Each pin has a
+minimum lifespan, and calls to this method made before the minum lifespan has
+elapsed will return an error, but the previously generated pin will not be
+affected.
 
 Sample Success Response:
-```
+```json
 {
-    "endpoint": "/api/openlid",
+    "endpoint": "/api/generate_pin",
     "request_type": "GET",
     "success": true,
     "reason": ""
 }
 ```
 
-Sample Failulre Response:
-```
+Sample Failure Response:
+```json
 {
-    "endpoint": "/api/openlid",
+    "endpoint": "/api/generate_pin",
     "request_type": "GET",
     "success": false,
-    "reason": "Invalid master authentication token"
+    "reason": "Pin changed too recently"
 }
 ```
