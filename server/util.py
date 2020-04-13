@@ -14,10 +14,10 @@ import traceback
 # messages, even if the handling of a particular request causes an error.
 def exceptionhandler(func):
     
-    def func_wrapper():
+    def func_wrapper(*args):
         try:
             # Attempt to execute subfunction normally
-            return func()
+            return func(*args)
         except Exception as e:
             # Build a new response
             obj = {
@@ -69,9 +69,9 @@ def apiwrap(func):
                 .format(type(obj[key]), key, t))
 
     @exceptionhandler
-    def func_wrapper():
+    def func_wrapper(*args):
         # Call the wrapped function
-        obj = func()
+        obj = func(*args)
 
         # Validate required parameters
         if not "success" in obj.keys():

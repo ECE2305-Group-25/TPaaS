@@ -8,6 +8,7 @@ import json
 import util
 import hardware
 from pin import PIN
+import werkzeug
 
 app = flask.Flask(__name__)
 pin = PIN()
@@ -60,6 +61,18 @@ def api_dispense():
     hardware.yeet_the_poo_poo_paper()
     return {
         "success": True
+    }
+
+####################
+## ERROR HANDLERS ##
+####################
+
+@app.errorhandler(404)
+@util.apiwrap
+def handle_bad_request(e):
+    return {
+        "success": False,
+        "reason": str(e)
     }
 
 ##########################
