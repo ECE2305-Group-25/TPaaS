@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TPaaS Server Tester</title>
+        <style>
+            html {
+                font-family: Arial;
+            }
+            pre {
+                background-color: #EFEFEF;
+                padding: 5px;
+                margin: 5px 15px;
+            }
+            .infotable td:first-child {
+                font-weight: bold;
+            }
+            table.test_table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            table.test_table>tbody>tr>th {
+                border: 1px solid black;
+                background-color: #CDCDCD;
+                padding: 3px;
+            }
+            table.test_table>tbody>tr>td {
+                border: 1px solid black;
+                padding: 3px;
+                white-space: nowrap;
+            }
+            table.test_table>tbody>tr>td.not_run {
+                color: #b3b300;
+            }
+            table.test_table>tbody>tr>td.running {
+                color: blue;
+            }
+            table.test_table>tbody>tr>td.pass {
+                color: green;
+            }
+            table.test_table>tbody>tr>td.fail {
+                color: red;
+            }
+            table.test_table>tbody>tr>td.endpoint {
+                font-family: monospace;
+            }
+        </style>
+        <script>
+            let current_response = null;
+            async function run_test(testname) {
+                // Prepare the test
+                console.log('Running test "' + testname + '"');
+                let status = document.querySelector('[statusfor="' + testname + '"');
+                status.className = "running";
+                status.innerText = "Running";
+                let response = document.querySelector('[responsefor="' + testname + '"');
+                current_response = response;
+                // Invoke the test
+                try {
+                    let testres = await testmap[testname]();
+                    console.log(testres);
+                    if(testres) {
+                        status.className = "pass";
+                        status.innerText = "Pass";
+                    } else {
+                        status.className = "fail";
+                        status.innerText = "Fail";
+                    }
+                } catch(e) {
+                    status.className = "fail";
+                    status.innerText = "Exception";
+                    throw e;
+                }
+            }
+            async function execute_request(url) {
+                return new Promise(function(resolve, reject) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", url);
+                    xhr.onload = function() {
+                        current_response.innerText = xhr.response;
+                        resolve([this.status, JSON.parse(xhr.response)]);
+                    }
+                    xhr.onerror = function() {
+                        reject([this.status, xhr.statusText]);
+                    }
+                    xhr.send();
+                });
+            }
+            //================//
+            // TEST FUNCTIONS //
+            //================//
+            let testmap = {
+                "status": test_api_status,
+                "generate_pin": test_api_generate_pin,
+                "dispense": test_api_dispense
+            };
+            async function test_api_status() {
+                let result = await execute_request('/api/status');
+                if(result[0] == 200 && result[1]['success']) {
+                    return true;
+                }
+                return false;
+            }
+            async function test_api_generate_pin() {
+                let result = await execute_request('/api/generate_pin');
+                if(result[0] == 200 && result[1]['success']) {
+                    return true;
+                }
+                return false;
+            }
+            async function test_api_dispense() {
+                let pin = prompt("Enter PIN");
+                let result = await execute_request('/api/dispense?auth=' + pin);
+                console.log(result[1]['success'])
+                if(result[0] == 200 && result[1]['success']) {
+                    return true;
+                }
+                return false;
+            }
+        </script>
+    </head>
+    <body>
+        <h1>TPaaS Server Tester</h1>
+        <table class="infotable">
+            <tr>
+                <td>Branch:</td>
+                <td>{{ branch }}</td>
+            </tr>
+            <tr>
+                <td>Commit:</td>
+                <td>{{ commit }}</td>
+            </tr>
+            <tr>
+                <td>Clean:</td>
+                <td>{{ clean }}</td>
+            </tr>
+        </table>
+        <hr>
+        <table class="test_table">
+            <tr>
+                <th>Endpoint</th>
+                <th style="width: 150px">Result</th>
+                <th>Actions</th>
+                <th style="width: 10000px"></th>
+            </tr>
+            <!-- /api/status -->
+            <tr>
+                <td class="endpoint">/api/status</td>
+                <td class="not_run" statusfor="status">Not Run</td>
+                <td><a href="#" onclick="run_test('status')">Run</a></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan=4>
+                    Result:
+                    <pre responsefor="status"></pre>
+                </td> 
+            </tr>
+            <!-- /api/generate_pin -->
+            <tr>
+                <td class="endpoint">/api/generate_pin</td>
+                <td class="not_run" statusfor="generate_pin">Not Run</td>
+                <td><a href="#" onclick="run_test('generate_pin')">Run</a></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan=4>
+                    Result:
+                    <pre responsefor="generate_pin"></pre>
+                </td> 
+             </tr>
+            <!-- /api/dispense -->
+            <tr>
+                <td class="endpoint">/api/dispense</td>
+                <td class="not_run" statusfor="dispense">Not Run</td>
+                <td><a href="#" onclick="run_test('dispense')">Run</a></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan=4>
+                    Result:
+                    <pre responsefor="dispense"></pre>
+                </td> 
+             </tr>
+        </table>
+    </body>
+</html>

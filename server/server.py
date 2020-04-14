@@ -75,9 +75,20 @@ def handle_bad_request(e):
         "reason": str(e)
     }
 
-##########################
-## APIWRAP TEST METHODS ##
-##########################
+##################
+## TEST METHODS ##
+##################
+
+import subprocess
+
+@app.route('/test')
+def test_getpage():
+    branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True).decode()
+    commit = subprocess.check_output('git rev-parse --verify HEAD', shell=True).decode()
+    clean = subprocess.Popen('git diff-index --quiet HEAD --', shell=True, stdout=subprocess.PIPE)
+    clean.communicate()
+    clean = "clean" if clean.returncode == 0 else "dirty"
+    return flask.render_template('test.html', branch=branch, commit=commit, clean=clean)
 
 @app.route('/test/missing_param')
 @util.apiwrap
