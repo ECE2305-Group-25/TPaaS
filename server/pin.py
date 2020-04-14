@@ -14,7 +14,7 @@ class PIN:
 
     def generate_new_pin(self):
         if time.time() > self.last_pin_generation_time + self.minimum_pin_lifespan:
-            self.pin = random.randrange(0,1000)
+            self.pin = random.randrange(0,10000)
             self.last_pin_generation_time = time.time()
             return True, self.pin
         else:

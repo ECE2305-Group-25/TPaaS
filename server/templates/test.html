@@ -40,8 +40,17 @@
             table.test_table>tbody>tr>td.fail {
                 color: red;
             }
-            table.test_table>tbody>tr>td.endpoint {
-                font-family: monospace;
+            div.resbox {
+                max-height: 0px;
+                overflow: hidden;
+            }
+            div.resbox[expand="true"] {
+                max-height: inherit;
+            }
+            span.action {
+                color: #0000EE;
+                text-decoration: underline;
+                cursor: pointer;
             }
         </style>
         <script>
@@ -49,10 +58,10 @@
             async function run_test(testname) {
                 // Prepare the test
                 console.log('Running test "' + testname + '"');
-                let status = document.querySelector('[statusfor="' + testname + '"');
+                let status = document.querySelector('[statusfor="' + testname + '"]');
                 status.className = "running";
                 status.innerText = "Running";
-                let response = document.querySelector('[responsefor="' + testname + '"');
+                let response = document.querySelector('[responsefor="' + testname + '"]');
                 current_response = response;
                 // Invoke the test
                 try {
@@ -88,10 +97,20 @@
             //================//
             // TEST FUNCTIONS //
             //================//
+            let pin_for_test = undefined;
+            async function run_all_tests() {
+                for(test in testmap) {
+                    await run_test(test);
+                }
+            }
             let testmap = {
                 "status": test_api_status,
                 "generate_pin": test_api_generate_pin,
-                "dispense": test_api_dispense
+                "dispense": test_api_dispense,
+                "generate_pin_b": test_api_generate_pin_b,
+                "missing_param": test_test_missing_param,
+                "extra_param": test_test_extra_param,
+                "handle_exception": test_test_handle_exception
             };
             async function test_api_status() {
                 let result = await execute_request('/api/status');
@@ -103,18 +122,75 @@
             async function test_api_generate_pin() {
                 let result = await execute_request('/api/generate_pin');
                 if(result[0] == 200 && result[1]['success']) {
+                    if("pin" in result[1]['data']) {
+                        console.log("Debug mode enabled! Got pin");
+                        pin_for_test = result[1]['data']['pin'];
+                    }
                     return true;
                 }
                 return false;
             }
             async function test_api_dispense() {
-                let pin = prompt("Enter PIN");
-                let result = await execute_request('/api/dispense?auth=' + pin);
+                if(pin_for_test == undefined) {
+                    pin_for_test = prompt("Enter PIN");
+                }
+                let result = await execute_request('/api/dispense?auth=' + pin_for_test);
                 console.log(result[1]['success'])
                 if(result[0] == 200 && result[1]['success']) {
                     return true;
                 }
                 return false;
+            }
+            async function test_api_generate_pin_b() {
+                let result = await execute_request('/api/generate_pin');
+                if(result[0] == 200 && !result[1]['success'] && result[1]['reason'] == "Pin changed too recently") {
+                    return true;
+                }
+                return false;
+            }
+            async function test_test_missing_param() {
+                let result = await execute_request('/test/missing_param');
+                if(result[0] == 200 && !result[1]['success']) {
+                    if("exception_type" in result[1]['data']) {
+                        if(result[1]['data']['exception_type'] == "MalformedResponseException") {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            async function test_test_extra_param() {
+                let result = await execute_request('/test/extra_param');
+                if(result[0] == 200 && !result[1]['success']) {
+                    if("exception_type" in result[1]['data']) {
+                        if(result[1]['data']['exception_type'] == "MalformedResponseException") {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            async function test_test_handle_exception() {
+                let result = await execute_request('/test/handle_exception');
+                if(result[0] == 200 && !result[1]['success']) {
+                    if("exception_type" in result[1]['data'] && "exception_msg" in result[1]['data']) {
+                        if(result[1]['data']['exception_type'] == "Exception" && result[1]['data']['exception_msg'] == "Test Exception!") {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            //==============//
+            // MISC HELPERS //
+            //==============//
+            function showhide(testname) {
+                let container = document.querySelector('[responsefor="' + testname + '"]').parentElement;
+                if(container.getAttribute("expand") == "true") {
+                    container.setAttribute("expand", "false");
+                } else {
+                    container.setAttribute("expand", "true");
+                }
             }
         </script>
     </head>
@@ -135,50 +211,138 @@
             </tr>
         </table>
         <hr>
+        <span class="action" onclick="run_all_tests()">Run All Tests</span>
         <table class="test_table">
             <tr>
-                <th>Endpoint</th>
+                <th style="width: 150px">Test Name</th>
                 <th style="width: 150px">Result</th>
-                <th>Actions</th>
-                <th style="width: 10000px"></th>
+                <th style="width: 150px">Actions</th>
+                <th></th>
             </tr>
             <!-- /api/status -->
             <tr>
-                <td class="endpoint">/api/status</td>
+                <td>Test <code>/api/status</code></td>
                 <td class="not_run" statusfor="status">Not Run</td>
-                <td><a href="#" onclick="run_test('status')">Run</a></td>
+                <td>
+                    <span class="action" onclick="run_test('status')">Run</span>
+                    <span class="action" onclick="showhide('status')">Results</span>
+                </td>
                 <td></td>
             </tr>
             <tr>
                 <td colspan=4>
-                    Result:
-                    <pre responsefor="status"></pre>
+                    <div class="resbox">
+                        Result:
+                        <pre responsefor="status"></pre>
+                    </div>
                 </td> 
             </tr>
             <!-- /api/generate_pin -->
             <tr>
-                <td class="endpoint">/api/generate_pin</td>
+                <td>Test <code>/api/generate_pin</code></td>
                 <td class="not_run" statusfor="generate_pin">Not Run</td>
-                <td><a href="#" onclick="run_test('generate_pin')">Run</a></td>
+                <td>
+                    <span class="action" onclick="run_test('generate_pin')">Run</span>
+                    <span class="action" onclick="showhide('generate_pin')">Results</span>
+                </td>
                 <td></td>
             </tr>
             <tr>
                 <td colspan=4>
-                    Result:
-                    <pre responsefor="generate_pin"></pre>
+                    <div class="resbox">
+                        Result:
+                        <pre responsefor="generate_pin"></pre>
+                    </div>
                 </td> 
              </tr>
             <!-- /api/dispense -->
             <tr>
-                <td class="endpoint">/api/dispense</td>
+                <td>Test <code>/api/dispense</code></td>
                 <td class="not_run" statusfor="dispense">Not Run</td>
-                <td><a href="#" onclick="run_test('dispense')">Run</a></td>
+                <td>
+                    <span class="action" onclick="run_test('dispense')">Run</span>
+                    <span class="action" onclick="showhide('dispense')">Results</span>
+                </td>
+                <td></td>
+            </tr>
+            <tr class="resrow">
+                <td colspan=4>
+                    <div class="resbox">
+                        Result:
+                        <pre responsefor="dispense"></pre>
+                    </div>
+                </td> 
+             </tr>
+            <!-- /api/generate_pin second -->
+            <tr>
+                <td>Test <code>/api/generate_pin</code> rate limit</td>
+                <td class="not_run" statusfor="generate_pin_b">Not Run</td>
+                <td>
+                    <span class="action" onclick="run_test('generate_pin_b')">Run</span>
+                    <span class="action" onclick="showhide('generate_pin_b')">Results</span>
+                </td>
                 <td></td>
             </tr>
             <tr>
                 <td colspan=4>
-                    Result:
-                    <pre responsefor="dispense"></pre>
+                    <div class="resbox">
+                        Result:
+                        <pre responsefor="generate_pin_b"></pre>
+                    </div>
+                </td> 
+             </tr>
+            <!-- /test/missing_param -->
+            <tr>
+                <td>Test <code>/test/missing_param</code></td>
+                <td class="not_run" statusfor="missing_param">Not Run</td>
+                <td>
+                    <span class="action" onclick="run_test('missing_param')">Run</span>
+                    <span class="action" onclick="showhide('missing_param')">Results</span>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan=4>
+                    <div class="resbox">
+                        Result:
+                        <pre responsefor="missing_param"></pre>
+                    </div>
+                </td> 
+             </tr>
+            <!-- /test/extra_param -->
+            <tr>
+                <td>Test <code>/test/extra_param</code></td>
+                <td class="not_run" statusfor="extra_param">Not Run</td>
+                <td>
+                    <span class="action" onclick="run_test('extra_param')">Run</span>
+                    <span class="action" onclick="showhide('extra_param')">Results</span>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan=4>
+                    <div class="resbox">
+                        Result:
+                        <pre responsefor="extra_param"></pre>
+                    </div>
+                </td> 
+             </tr>
+            <!-- /test/handle_exception -->
+            <tr>
+                <td>Test <code>/test/handle_exception</code></td>
+                <td class="not_run" statusfor="handle_exception">Not Run</td>
+                <td>
+                    <span class="action" onclick="run_test('handle_exception')">Run</span>
+                    <span class="action" onclick="showhide('handle_exception')">Results</span>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan=4>
+                    <div class="resbox">
+                        Result:
+                        <pre responsefor="handle_exception"></pre>
+                    </div>
                 </td> 
              </tr>
         </table>

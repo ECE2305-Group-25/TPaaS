@@ -9,6 +9,7 @@ import util
 import hardware
 from pin import PIN
 import werkzeug
+import os
 
 app = flask.Flask(__name__)
 pin = PIN()
@@ -38,6 +39,13 @@ def api_generatepin():
         }
     else:
         hardware.change_pin(result)
+        if os.getenv("TPAAS_DEBUG") == "true":
+            return {
+                "success": True,
+                "data": {
+                    "pin": result
+                }
+            }
         return {
             "success": True
         }
@@ -94,7 +102,7 @@ def test_getpage():
 @util.apiwrap
 def test_missingparam():
     return {
-        "success": True
+        "success": False
     }
 
 @app.route('/test/extra_param')
@@ -107,3 +115,8 @@ def test_extraparam():
         },
         "extra": 3
     }
+
+@app.route('/test/handle_exception')
+@util.apiwrap
+def test_handleexception():
+    raise Exception("Test Exception!")
