@@ -13,6 +13,7 @@ import os
 
 app = flask.Flask(__name__)
 pin = PIN()
+him = hardware.HIM()
 
 ##############
 ## HANDLERS ##
@@ -24,7 +25,7 @@ def api_status():
     return {
         "success": True,
         "data": {
-            "rolls_remaining": hardware.get_remaining_rolls()
+            "rolls_remaining": him.get_remaining_rolls()
         }
     }
 
@@ -38,7 +39,7 @@ def api_generatepin():
             "reason": result
         }
     else:
-        hardware.change_pin(result)
+        him.change_pin(result)
         if os.getenv("TPAAS_DEBUG") == "true":
             return {
                 "success": True,
@@ -65,8 +66,8 @@ def api_dispense():
             "success": False,
             "reason": "Authentication Failure"
         }
-    # Dispense
-    hardware.yeet_the_poo_poo_paper()
+    # Yeet the poo poo paper
+    him.dispense()
     return {
         "success": True
     }
