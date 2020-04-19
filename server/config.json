@@ -1,0 +1,72 @@
+{
+	"components": {
+		"display": {
+			"pins": {
+				"SCL": "SCL",
+				"SDA": "SDA"
+			},
+			"width": 128,
+			"height": 64,
+			"i2c_addr": 60,
+			"font_path": "./components/unispace bd.ttf"
+		},
+		"servos": {
+			"pins": {
+				"SCL": "SCL",
+				"SDA": "SDA"
+			},
+			"i2c_addr": 64,
+			"channels": 16,
+			"pulse_width_range": [
+				500,
+				2500
+			],
+			"platforms": {
+				"p1": [
+					{
+						"label": "l1",
+						"channel": 0,
+						"min_angle": 0,
+						"max_angle": 180,
+						"inverted": false
+					},
+					{
+						"label": "r1",
+						"channel": 1,
+						"min_angle": 0,
+						"max_angle": 180,
+						"inverted": true
+					}
+				],
+				"p2": [
+					{
+						"label": "l2",
+						"channel": 14,
+						"min_angle": 0,
+						"max_angle": 180,
+						"inverted": false
+					},
+					{
+						"label": "r2",
+						"channel": 15,
+						"min_angle": 0,
+						"max_angle": 180,
+						"inverted": true
+					}
+				]
+			}
+		},
+		"proximity_sensor": {
+			"pins": {
+				"MISO": "MISO",
+				"MOSI": "MOSI",
+				"CLOCK": "SCLK",
+				"DATA": "D5"
+			},
+			"channel": 0
+		},
+		"lid_switch": {
+			"pullup_pin": 21
+		}
+	}
+}
