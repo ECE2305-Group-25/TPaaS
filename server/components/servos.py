@@ -2,6 +2,7 @@
 # Servo Driver Module
 #
 import time
+import threading
 from adafruit_servokit import ServoKit
 
 kit = ServoKit(channels=16)
@@ -59,6 +60,28 @@ class ServoPlatform:
 
     def close(self):
         self.driver.full_angle(self.servos, 1)
+
+
+class ServoDispenser:
+    def __init__(self, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+        self.run_lock = threading.Lock()
+
+    def operate(self):
+        self.run_lock.acquire()
+        self.p1.open()
+        time.sleep(2)
+        self.p1.close()
+        self.p2.open()
+        time.sleep(2)
+        self.p2.close()
+        self.run_lock.release()
+
+    def dispense(self):
+        t = threading.Thread(target=self.operate)
+        t.start()
+        return t
 
 
 # if __name__ == '__main__':
