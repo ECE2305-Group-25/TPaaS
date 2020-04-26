@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import SmoothPinCodeInput from 'react-native-smooth-pincode-input';
 
+import API from './API';
 import DropDownHolder from './DropDownHolder';
 
 
@@ -14,8 +15,13 @@ class Home extends React.Component {
     this.pinInput = React.createRef();
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this.keyboardDidHide);
+    let call = await API.get_status();
+    if (call.success === true) {
+      DropDownHolder.throwSuccess('Connected to TPaaS System');
+      if (call.data.rolls_remaining >= 0) this.setState({ roll_count: call.data.rolls_remaining });
+    }
   }
 
   componentWillUnmount() {
@@ -27,9 +33,9 @@ class Home extends React.Component {
     this.setState({ pin_modal: false, pin: '' });
   }
 
-  check_pin(code) {
-    // TODO: Replace this with auth API call
-    if (code !== '1111') {
+  async check_pin(code) {
+    let pin_check = await API.get_dispense(code);
+    if (!pin_check.success) {
       colors.modal_bg = 'red';
       setTimeout(() => {
         colors.modal_bg = colors.primary;
@@ -41,17 +47,28 @@ class Home extends React.Component {
     return true;
   }
 
-  dispense(pin) {
+  async dispense(pin) {
     let { roll_count } = this.state;
     if (roll_count < 1) {
       DropDownHolder.throwError('Out of Rolls. Please re-stock dispenser and try again.');
     }
-    if (!this.check_pin(pin)) {
-      DropDownHolder.throwError('Invalid PIN. Please try again.');
+    let call = await API.get_dispense(pin);
+    if (!call.success) {
+      // Condition for invalid auth
+      if (call.reason && call.reason.toLowerCase().includes('authentication')) {
+        DropDownHolder.throwError(call.reason);
+        colors.modal_bg = 'red';
+        setTimeout(() => {
+          colors.modal_bg = colors.primary;
+          this.setState({ pin: '' });
+        }, 1000);
+      } else {
+        DropDownHolder.throwError(call.reason);
+      }
+      this.setState({ pin: '' });
       return;
     }
-
-    // TODO: Insert dispsense API call
+    DropDownHolder.throwSuccess('Authentication Successful! Enjoy!');
     this.setState({ roll_count: roll_count - 1 });
     this.setState({ pin_modal: false, pin: '' });
   }
@@ -66,7 +83,14 @@ class Home extends React.Component {
           onPress={() => {
             if (this.state.roll_count < 1) {
               DropDownHolder.throwError('Out of Rolls. Please re-stock dispenser and try again.');
-            } else this.setState({ pin_modal: true });
+            } else {
+              API.get_generate_pin().then((result) => {
+                if (!result.success) {
+                  DropDownHolder.throwError(result.reason);
+                }
+                this.setState({ pin_modal: true });
+              });
+            }
           }}
         >
           <Text style={styles.ButtonText}>Dispense</Text>

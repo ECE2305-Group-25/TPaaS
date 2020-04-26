@@ -1,0 +1,5 @@
+{
+	"protocol": "http",
+	"host": "[SERVER_IP]",
+	"port": 5000
+}
