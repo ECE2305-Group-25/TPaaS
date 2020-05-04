@@ -72,6 +72,18 @@ def api_dispense():
         "success": True
     }
 
+@app.route('/')
+def static_redirect():
+    response = flask.Response()
+    response.headers["Location"] = "app/"
+    response.status_code = 301
+    return response
+
+@app.route('/app/<path:path>')
+def static_handler(path):
+    print("HANDLER")
+    return flask.send_from_directory('static/web-build', path)
+
 ####################
 ## ERROR HANDLERS ##
 ####################
