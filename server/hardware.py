@@ -3,6 +3,8 @@
 #
 from config import config
 import os
+import json
+import math
 
 if os.getenv("TPAAS_SHIM") == "true":
     class HIM:
@@ -47,6 +49,11 @@ else:
             self.sensor = proximity_sensor.ProximitySensor(
                 self.adc, cfg.proximity_sensor.channel)
 
+            print("Loading Proximity Sensor Calibration Data")
+            pscdfile = open("calibration.json","r")
+            self.pscalib = json.load(pscdfile)
+            pscdfile.close()
+
             # Init Display
             print("Initializing Display")
             self.display = display.Display(cfg.display.width, cfg.display.height,
@@ -77,9 +84,15 @@ else:
         # Return the number of rolls of toilet paper currently in the holder.
 
         def get_remaining_rolls(self):
-            distance = self.sensor.voltage
-            # TODO: Calculate remaining rolls
-            return -1
+            voltage = self.sensor.voltage
+            bestkey = ""
+            bestdiff = 99999
+            for key, value in self.pscalib:
+                diff = abs(value - voltage)
+                if diff < bestdiff:
+                    bestdiff = diff
+                    bestkey = key
+            return int(key)
 
 
 # if __name__ == '__main__':
